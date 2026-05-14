@@ -6,7 +6,7 @@
   <div class="mx-auto flex max-w-lg flex-col gap-6 p-6">
     <header class="flex flex-col gap-2">
       <h1 class="text-2xl font-semibold tracking-tight">First-time setup</h1>
-      <p class="text-sm text-zinc-300">Create the first admin account (max 10 admins total).</p>
+      <p class="text-sm text-zinc-300">Create the first admin account.</p>
     </header>
 
     {#if form?.error}

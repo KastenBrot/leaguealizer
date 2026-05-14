@@ -6,9 +6,11 @@ read-only page with standings and remaining matches.
 
 Scoring: **win = 1, draw = 0.5, loss = 0**.
 
+Design principles and workflow for humans and coding agents: **[AGENTS.md](./AGENTS.md)**.
+
 ## First run
 
-- Start the app and open `/setup` to create the **first admin user** (max 10 users total).
+- Start the app and open `/setup` to create the **first admin user**.
 - After at least one user exists, `/setup` is disabled and you'll use `/login`.
 
 ## Local dev

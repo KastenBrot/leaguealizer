@@ -1,0 +1,8 @@
+---
+description: Keep README.md accurate when the project changes
+alwaysApply: true
+---
+
+# README
+
+When you change user-visible behavior, setup, auth, configuration, env vars, Docker, scripts, or URLs, update `README.md` in the same session so it matches the code. Do not leave outdated limits, steps, or paths in the README.

@@ -2,8 +2,6 @@ import crypto from 'node:crypto';
 import { env } from '$env/dynamic/private';
 import { sqlite } from '$lib/server/db';
 
-export const MAX_USERS = 10;
-
 const SESSION_COOKIE = 'league_session';
 
 function getSessionSecret(): string {
@@ -90,11 +88,6 @@ export async function createUser(
   username: string,
   password: string
 ): Promise<{ id: number; username: string }> {
-  const c = countUsers();
-  if (c >= MAX_USERS) {
-    throw new Error(`User limit reached (${MAX_USERS})`);
-  }
-
   const passwordHash = await hashPassword(password);
   const info = sqlite
     .prepare('insert into users (username, password_hash) values (?, ?)')
