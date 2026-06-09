@@ -5,8 +5,6 @@ set -euo pipefail
 #   IMAGE              - fully qualified image ref to deploy (e.g. ghcr.io/owner/repo:sha)
 #   GHCR_USER          - username for ghcr.io (github.actor)
 #   GHCR_TOKEN         - token with read:packages for ghcr.io (GITHUB_TOKEN)
-#   CADDY_DOMAIN       - optional; hostname for Caddy auto-TLS, empty = :80 on IP
-
 APP_DIR="/opt/league"
 ENV_FILE="${APP_DIR}/.env"
 COMPOSE_FILE="${APP_DIR}/deploy/docker-compose.prod.yml"
@@ -56,7 +54,6 @@ if ! grep -qE '^SESSION_SECRET=' "$ENV_FILE" 2>/dev/null; then
 fi
 
 upsert_env IMAGE "${IMAGE}"
-upsert_env CADDY_DOMAIN "${CADDY_DOMAIN:-:80}"
 
 # --- Registry login ---------------------------------------------------------
 echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin

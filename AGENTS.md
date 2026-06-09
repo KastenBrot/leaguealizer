@@ -31,3 +31,16 @@ Guidance for AI assistants and contributors working on this repo.
 - Auth: session cookie + `SESSION_SECRET`; first user via `/setup`, then `/login` for `/admin`.
 
 When in doubt, read nearby files in the same feature area and mirror their approach.
+
+## Hetzner Cloud deployment notes
+
+- **Shared Caddy**: TLS terminates on lootbox’s Caddy (`/opt/lootbox/deploy/Caddyfile`). League has no Caddy service; it joins Docker network `deploy_default` so Caddy can `reverse_proxy league:3000`.
+- **Firewall (Hetzner)**: allow inbound **TCP 80/443** from `0.0.0.0/0` (and `::/0` if using IPv6). Restrict **TCP 22** to your admin IP(s).
+- **Key paths on server**:
+  - Compose: `/opt/league/deploy/docker-compose.prod.yml`
+  - Env file (created/updated by deploy): `/opt/league/.env`
+  - Persistent data: `/opt/league/data` (mounted into container at `/app/data`)
+- **Common failure modes**:
+  - League container can’t start: external network `deploy_default` missing — lootbox stack must be running first (`docker network ls`).
+  - 502 from league subdomain: league container not on `deploy_default`, or league service not up.
+  - “Cross-site POST form submissions are forbidden”: SvelteKit CSRF origin check; ensure Caddy forwards `Host`/scheme correctly (lootbox Caddyfile already sets `X-Forwarded-*` headers).

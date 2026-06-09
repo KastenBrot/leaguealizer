@@ -35,6 +35,35 @@ docker compose up --build
 
 Data persists in `./data` (SQLite database).
 
+## Production (Hetzner)
+
+League deploys to the same Hetzner VPS as [in-stock](https://github.com/Engines-Stuttgart/in-stock) (lootbox). TLS and the public hostname are handled by **lootbox’s Caddy**; league runs as an app-only container on the shared Docker network `deploy_default`.
+
+**Deploy trigger:** push to `main` (or manual **Deploy** workflow). GitHub Actions builds a Docker image, pushes to GHCR, rsyncs `deploy/` to the server, and runs `remote-deploy.sh`.
+
+**Server paths:**
+
+- App data (SQLite): `/opt/league/data`
+- Deploy files: `/opt/league/deploy/`
+- Env file (auto-managed): `/opt/league/.env`
+
+**First visit after deploy:** open `https://3hard.de/setup` to create the first admin user (see [First run](#first-run)).
+
+### GitHub secrets (league repo)
+
+| Secret | Purpose |
+|--------|---------|
+| `HETZNER_SSH_PRIVATE_KEY` | SSH key for `root@` the VPS (same as in-stock) |
+| `HETZNER_HOST` | Server IP or hostname |
+
+### in-stock repo (shared Caddy)
+
+Set `LEAGUE_DOMAIN` in the **in-stock** repo secrets to `3hard.de`. Deploy **in-stock first** so Caddy picks up the new site block, then deploy league.
+
+### DNS
+
+`3hard.de` A record → Hetzner server IP.
+
 ## URLs
 
 - `/` — public list of leagues.
