@@ -24,6 +24,25 @@
 
   $: playersWithResults = new Set(data.playerIdsWithResults);
 
+  $: sortedMatches = [...matches].sort((a, b) => {
+    const aOpen = a.result == null ? 0 : 1;
+    const bOpen = b.result == null ? 0 : 1;
+    return aOpen - bOpen || a.id - b.id;
+  });
+
+  $: openMatchCount = matches.filter((m) => m.result == null).length;
+
+  function outcomeBtnClass(selected: boolean, kind: 'win' | 'draw'): string {
+    const base = 'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition';
+    if (!selected) {
+      return `${base} border-zinc-700/80 bg-zinc-950/40 text-zinc-300 hover:border-zinc-500`;
+    }
+    if (kind === 'draw') {
+      return `${base} border-amber-500/45 bg-amber-950/40 text-amber-100`;
+    }
+    return `${base} border-emerald-500/50 bg-emerald-950/50 text-emerald-100`;
+  }
+
   function startEdit(p: { id: number; name: string; factionId: string }) {
     editingPlayerId = p.id;
     editName = p.name;
@@ -41,12 +60,6 @@
     );
   }
 
-  function resultLabel(m: (typeof matches)[number]): string {
-    if (!m.result) return 'open';
-    if (m.result === 'draw') return 'draw';
-    if (m.result === 'a') return `${m.playerAName} won`;
-    return `${m.playerBName} won`;
-  }
 
 </script>
 
@@ -259,70 +272,89 @@
     </section>
 
     {#if matches.length > 0}
-      <section>
-        <h2 class="mb-4 text-sm font-semibold text-zinc-300">Matches</h2>
-        <ul class="grid gap-4 lg:grid-cols-2">
-          {#each matches as m (m.id)}
-            <li
-              class="flex flex-col gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/35 p-5 shadow-md shadow-black/15 ring-1 ring-inset ring-white/5 backdrop-blur-md"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex min-w-0 flex-1 items-center justify-between gap-2 text-sm">
-                  <span class="flex min-w-0 flex-1 items-center gap-2 truncate font-semibold text-zinc-100">
-                    <FactionMark factionId={m.playerAFactionId} sizeClass="h-7 w-7 shrink-0" />
-                    <span class="truncate">{m.playerAName}</span>
-                  </span>
-                  <span class="shrink-0 text-[10px] font-bold uppercase tracking-widest text-zinc-600">vs</span>
-                  <span class="flex min-w-0 flex-1 items-center justify-end gap-2 truncate text-right font-semibold text-zinc-100">
-                    <span class="truncate">{m.playerBName}</span>
-                    <FactionMark factionId={m.playerBFactionId} sizeClass="h-7 w-7 shrink-0" />
-                  </span>
-                </div>
-              </div>
-              <p class="text-xs text-zinc-500">{resultLabel(m)}</p>
-              <div class="flex flex-wrap items-center gap-2 border-t border-zinc-800/60 pt-4">
-                <form method="POST" action="?/recordResult" class="flex flex-wrap gap-2">
-                  <input type="hidden" name="matchId" value={m.id} />
-                  <button
-                    type="submit"
-                    name="result"
-                    value="a"
-                    class={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${m.result === 'a' ? 'border-emerald-500/50 bg-emerald-950/50 text-emerald-100' : 'border-zinc-700/80 bg-zinc-950/40 text-zinc-300 hover:border-zinc-500'}`}
-                  >
-                    {m.playerAName} wins
-                  </button>
-                  <button
-                    type="submit"
-                    name="result"
-                    value="draw"
-                    class={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${m.result === 'draw' ? 'border-amber-500/45 bg-amber-950/40 text-amber-100' : 'border-zinc-700/80 bg-zinc-950/40 text-zinc-300 hover:border-zinc-500'}`}
-                  >
-                    Draw
-                  </button>
-                  <button
-                    type="submit"
-                    name="result"
-                    value="b"
-                    class={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${m.result === 'b' ? 'border-emerald-500/50 bg-emerald-950/50 text-emerald-100' : 'border-zinc-700/80 bg-zinc-950/40 text-zinc-300 hover:border-zinc-500'}`}
-                  >
-                    {m.playerBName} wins
-                  </button>
-                </form>
-                {#if m.result}
-                  <form method="POST" action="?/clearResult">
-                    <input type="hidden" name="matchId" value={m.id} />
-                    <button
-                      class="rounded-lg border border-zinc-800/80 bg-zinc-950/30 px-2.5 py-1.5 text-xs text-zinc-500 transition hover:text-zinc-300"
-                      type="submit"
-                    >
-                      Clear
-                    </button>
-                  </form>
-                {/if}
-              </div>
-            </li>
-          {/each}
-        </ul>
+      <section class="overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/35 shadow-lg shadow-black/20 ring-1 ring-inset ring-white/5 backdrop-blur-md">
+        <div class="flex flex-col gap-1 border-b border-zinc-800/80 bg-zinc-950/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <h2 class="text-sm font-semibold text-zinc-100">Matches</h2>
+          <span class="text-xs tabular-nums text-zinc-500">
+            {openMatchCount} open · {stats.completed}/{stats.total} recorded
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              <tr class="border-b border-zinc-800/80">
+                <th class="px-5 py-3 sm:px-6">Player A</th>
+                <th class="px-5 py-3 sm:px-6">Player B</th>
+                <th class="px-5 py-3 sm:px-6">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each sortedMatches as m, i (m.id)}
+                <tr
+                  class={`border-b border-zinc-800/50 ${m.result == null ? 'bg-amber-950/10' : i % 2 === 1 ? 'bg-zinc-950/25' : ''}`}
+                >
+                  <td class="px-5 py-3 sm:px-6">
+                    <div class="flex min-w-0 items-center gap-2">
+                      <FactionMark factionId={m.playerAFactionId} sizeClass="h-7 w-7 shrink-0" />
+                      <span class="truncate font-medium text-zinc-100">{m.playerAName}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3 sm:px-6">
+                    <div class="flex min-w-0 items-center gap-2">
+                      <FactionMark factionId={m.playerBFactionId} sizeClass="h-7 w-7 shrink-0" />
+                      <span class="truncate font-medium text-zinc-100">{m.playerBName}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3 sm:px-6">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <form method="POST" action="?/recordResult" class="flex flex-wrap gap-1.5">
+                        <input type="hidden" name="matchId" value={m.id} />
+                        <button
+                          type="submit"
+                          name="result"
+                          value="a"
+                          title="{m.playerAName} wins"
+                          class={outcomeBtnClass(m.result === 'a', 'win')}
+                        >
+                          A
+                        </button>
+                        <button
+                          type="submit"
+                          name="result"
+                          value="draw"
+                          title="Draw"
+                          class={outcomeBtnClass(m.result === 'draw', 'draw')}
+                        >
+                          Draw
+                        </button>
+                        <button
+                          type="submit"
+                          name="result"
+                          value="b"
+                          title="{m.playerBName} wins"
+                          class={outcomeBtnClass(m.result === 'b', 'win')}
+                        >
+                          B
+                        </button>
+                      </form>
+                      {#if m.result}
+                        <form method="POST" action="?/clearResult">
+                          <input type="hidden" name="matchId" value={m.id} />
+                          <button
+                            class="rounded-lg border border-zinc-800/80 bg-zinc-950/30 px-2.5 py-1.5 text-xs text-zinc-500 transition hover:text-zinc-300"
+                            type="submit"
+                          >
+                            Clear
+                          </button>
+                        </form>
+                      {/if}
+                    </div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
       </section>
     {/if}
 

@@ -13,21 +13,12 @@
 
 <main class="relative z-10 min-h-dvh text-zinc-50">
   <div class="mx-auto flex max-w-5xl flex-col gap-10 px-5 py-10 sm:px-8 sm:py-14">
-    <header class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-      <div class="max-w-xl space-y-3">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-teal-400/90">Round robin</p>
-        <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Leagues</h1>
-        <p class="text-sm leading-relaxed text-zinc-400">
-          Open a league for live standings, who still owes a match, and recent results — without noise.
-        </p>
-      </div>
-      <a
-        class="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-zinc-700/80 bg-zinc-900/50 px-4 py-2.5 text-sm font-medium text-zinc-100 shadow-sm backdrop-blur transition hover:border-zinc-500 hover:bg-zinc-800/70"
-        href={data.user ? '/admin' : '/login'}
-      >
-        {data.user ? 'Admin' : 'Login'}
-        <span aria-hidden="true" class="text-zinc-500">→</span>
-      </a>
+    <header class="max-w-xl space-y-3">
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-teal-400/90">Round robin</p>
+      <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Leagues</h1>
+      <p class="text-sm leading-relaxed text-zinc-400">
+        Open a league for live standings, who still owes a match, and recent results — without noise.
+      </p>
     </header>
 
     {#if data.leagues.length === 0}

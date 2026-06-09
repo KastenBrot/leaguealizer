@@ -3,6 +3,10 @@
  * Edit values here only — logic lives in feature modules (e.g. `$lib/factions.ts`).
  */
 
+// --- App links ---
+
+export const GITHUB_REPO_URL = 'https://github.com/KastenBrot/league';
+
 // --- UI limits ---
 
 export const RECENT_RESULTS_STEP = 5;

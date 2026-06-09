@@ -58,16 +58,13 @@
             <span class="tabular-nums">{stats.completed}/{stats.total} matches played</span>
           </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2 self-start">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 self-start">
           {#if data.user}
-            <a class={headerBtnClass} href="/admin/leagues/{league.slug}">
+            <a
+              class="text-sm text-teal-400/90 underline-offset-4 hover:text-teal-300 hover:underline"
+              href="/admin/leagues/{league.slug}"
+            >
               Edit league
-              <span aria-hidden="true" class="text-zinc-500">→</span>
-            </a>
-          {:else}
-            <a class={headerBtnClass} href="/login">
-              Login
-              <span aria-hidden="true" class="text-zinc-500">→</span>
             </a>
           {/if}
           <a class={headerBtnClass} href="/">
@@ -82,7 +79,7 @@
       <section class="rounded-2xl border border-zinc-800/80 bg-zinc-900/35 p-5 shadow-lg shadow-black/20 ring-1 ring-inset ring-white/5 backdrop-blur-md sm:p-6">
         <div class="mb-5">
           <h2 class="text-sm font-semibold text-zinc-100">Points</h2>
-          <p class="mt-1 text-xs text-zinc-500">Bar length reflects points — expand standings below for W/D/L.</p>
+          <p class="mt-1 text-xs text-zinc-500">Expand standings below for W/D/L.</p>
         </div>
         <ul class="space-y-3">
           {#each standings as row, i (row.playerId)}
@@ -90,7 +87,13 @@
             <li class="flex items-center gap-3">
               <span class="w-14 shrink-0 text-right text-xs tabular-nums text-zinc-500">
                 {#if i < 3}
-                  <span class="block text-[10px] font-medium uppercase tracking-wide text-zinc-600">{podiumRankLabel((i + 1) as 1 | 2 | 3)}</span>
+                  <span class="block text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+                    {#if i < 2}
+                      {podiumRankLabel((i + 1) as 1 | 2)}
+                    {:else}
+                      &nbsp;
+                    {/if}
+                  </span>
                 {/if}
                 {i + 1}
               </span>

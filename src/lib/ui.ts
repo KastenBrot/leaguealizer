@@ -34,8 +34,7 @@ export function publicResultLabel(m: {
   return 'Open';
 }
 
-export function podiumRankLabel(rank: 1 | 2 | 3): string {
+export function podiumRankLabel(rank: 1 | 2): string {
   if (rank === 1) return 'Champ';
-  if (rank === 2) return 'Almost';
-  return 'Third wheel';
+  return 'Almost there';
 }
