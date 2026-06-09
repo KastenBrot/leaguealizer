@@ -17,6 +17,30 @@ export type MatchWithNames = Match & {
   playerBFactionId: string;
 };
 
+export type OpenMatchOpponent = { id: number; name: string; factionId: string };
+
+export type OpenMatchesPerPlayerRow = {
+  playerId: number;
+  playerName: string;
+  factionId: string;
+  opponents: OpenMatchOpponent[];
+};
+
+const MATCH_WITH_NAMES_SELECT = `
+  select m.id,
+         m.league_id  as leagueId,
+         m.player_a_id as playerAId,
+         m.player_b_id as playerBId,
+         m.result,
+         m.recorded_at as recordedAt,
+         pa.name as playerAName,
+         pb.name as playerBName,
+         pa.faction_id as playerAFactionId,
+         pb.faction_id as playerBFactionId
+    from matches m
+    join players pa on pa.id = m.player_a_id
+    join players pb on pb.id = m.player_b_id`;
+
 /**
  * Generate unordered pairs (i, j) with i < j for a round-robin where every
  * player plays every other player once.
@@ -40,19 +64,7 @@ export function generatePairs<T extends { id: number }>(
 export function listMatches(leagueId: number): MatchWithNames[] {
   return sqlite
     .prepare(
-      `select m.id,
-              m.league_id  as leagueId,
-              m.player_a_id as playerAId,
-              m.player_b_id as playerBId,
-              m.result,
-              m.recorded_at as recordedAt,
-              pa.name as playerAName,
-              pb.name as playerBName,
-              pa.faction_id as playerAFactionId,
-              pb.faction_id as playerBFactionId
-         from matches m
-         join players pa on pa.id = m.player_a_id
-         join players pb on pb.id = m.player_b_id
+      `${MATCH_WITH_NAMES_SELECT}
         where m.league_id = ?
         order by m.id asc`
     )
@@ -62,19 +74,7 @@ export function listMatches(leagueId: number): MatchWithNames[] {
 export function listRecentResults(leagueId: number, limit = 10): MatchWithNames[] {
   return sqlite
     .prepare(
-      `select m.id,
-              m.league_id  as leagueId,
-              m.player_a_id as playerAId,
-              m.player_b_id as playerBId,
-              m.result,
-              m.recorded_at as recordedAt,
-              pa.name as playerAName,
-              pb.name as playerBName,
-              pa.faction_id as playerAFactionId,
-              pb.faction_id as playerBFactionId
-         from matches m
-         join players pa on pa.id = m.player_a_id
-         join players pb on pb.id = m.player_b_id
+      `${MATCH_WITH_NAMES_SELECT}
         where m.league_id = ? and m.result is not null
         order by m.recorded_at desc, m.id desc
         limit ?`
@@ -82,19 +82,64 @@ export function listRecentResults(leagueId: number, limit = 10): MatchWithNames[
     .all(leagueId, limit) as MatchWithNames[];
 }
 
-export function getMatch(leagueId: number, matchId: number): Match | undefined {
-  return sqlite
-    .prepare(
-      `select id,
-              league_id as leagueId,
-              player_a_id as playerAId,
-              player_b_id as playerBId,
-              result,
-              recorded_at as recordedAt
-         from matches
-        where id = ? and league_id = ?`
-    )
-    .get(matchId, leagueId) as Match | undefined;
+export function matchStats(matches: MatchWithNames[]): { total: number; completed: number } {
+  let completed = 0;
+  for (const m of matches) {
+    if (m.result !== null) completed += 1;
+  }
+  return { total: matches.length, completed };
+}
+
+export function recentResultsFromMatches(matches: MatchWithNames[], limit: number): MatchWithNames[] {
+  return matches
+    .filter((m) => m.result !== null)
+    .sort((a, b) => {
+      const at = a.recordedAt ?? 0;
+      const bt = b.recordedAt ?? 0;
+      if (bt !== at) return bt - at;
+      return b.id - a.id;
+    })
+    .slice(0, limit);
+}
+
+export function playerIdsWithResults(matches: MatchWithNames[]): number[] {
+  const ids = new Set<number>();
+  for (const m of matches) {
+    if (m.result === null) continue;
+    ids.add(m.playerAId);
+    ids.add(m.playerBId);
+  }
+  return [...ids];
+}
+
+export function openMatchesPerPlayer(
+  players: { id: number; name: string; factionId: string }[],
+  matches: MatchWithNames[]
+): OpenMatchesPerPlayerRow[] {
+  type Opponent = OpenMatchOpponent;
+  const openByPlayer = new Map<number, Opponent[]>();
+  for (const p of players) openByPlayer.set(p.id, []);
+  for (const m of matches) {
+    if (m.result !== null) continue;
+    openByPlayer.get(m.playerAId)?.push({
+      id: m.playerBId,
+      name: m.playerBName,
+      factionId: m.playerBFactionId
+    });
+    openByPlayer.get(m.playerBId)?.push({
+      id: m.playerAId,
+      name: m.playerAName,
+      factionId: m.playerAFactionId
+    });
+  }
+  return players
+    .map((p) => ({
+      playerId: p.id,
+      playerName: p.name,
+      factionId: p.factionId,
+      opponents: (openByPlayer.get(p.id) ?? []).sort((a, b) => a.name.localeCompare(b.name))
+    }))
+    .sort((a, b) => a.playerName.localeCompare(b.playerName));
 }
 
 export function recordMatchResult(

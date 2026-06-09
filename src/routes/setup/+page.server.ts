@@ -1,11 +1,5 @@
 import type { Actions, PageServerLoad } from './$types';
-import {
-  countUsers,
-  createUser,
-  getSessionCookieName,
-  signSession,
-  touchLastLogin
-} from '$lib/server/auth';
+import { countUsers, createUser, setSessionCookie, touchLastLogin } from '$lib/server/auth';
 import { fail, redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async () => {
@@ -30,13 +24,7 @@ export const actions: Actions = {
     try {
       const u = await createUser(username, password);
       touchLastLogin(u.id);
-      cookies.set(getSessionCookieName(), signSession({ uid: u.id }), {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 60 * 60 * 24 * 30
-      });
+      setSessionCookie(cookies, u.id);
     } catch (e: any) {
       return fail(400, { username, error: e?.message ?? 'Failed to create user.' });
     }

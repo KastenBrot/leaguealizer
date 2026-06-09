@@ -1,9 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import {
-  getSessionCookieName,
   getUserForLogin,
-  signSession,
+  setSessionCookie,
   touchLastLogin,
   verifyPassword
 } from '$lib/server/auth';
@@ -26,13 +25,7 @@ export const actions: Actions = {
     if (!ok) return fail(400, { username, error: 'Invalid username or password.' });
 
     touchLastLogin(u.id);
-    cookies.set(getSessionCookieName(), signSession({ uid: u.id }), {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      maxAge: 60 * 60 * 24 * 30
-    });
+    setSessionCookie(cookies, u.id);
 
     throw redirect(303, '/admin');
   }

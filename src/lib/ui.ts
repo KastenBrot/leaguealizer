@@ -19,14 +19,19 @@ export function statusBadgeClass(status: string): string {
   return 'border-amber-500/40 bg-amber-950/45 text-amber-100';
 }
 
+export function fmtPoints(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
 export function publicResultLabel(m: {
-  result: string;
+  result: string | null;
   playerAName: string;
   playerBName: string;
 }): string {
   if (m.result === 'draw') return 'Draw — mutual coping';
   if (m.result === 'a') return `${m.playerAName} took the W`;
-  return `${m.playerBName} took the W`;
+  if (m.result === 'b') return `${m.playerBName} took the W`;
+  return 'Open';
 }
 
 export function podiumRankLabel(rank: 1 | 2 | 3): string {

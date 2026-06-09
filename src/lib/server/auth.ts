@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { Cookies } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { sqlite } from '$lib/server/db';
 
@@ -53,9 +54,23 @@ export function getSessionCookieName() {
   return SESSION_COOKIE;
 }
 
+let cachedUserCount: number | null = null;
+
 export function countUsers(): number {
+  if (cachedUserCount !== null) return cachedUserCount;
   const row = sqlite.prepare('select count(1) as c from users').get() as { c: number };
-  return row.c;
+  cachedUserCount = row.c;
+  return cachedUserCount;
+}
+
+export function setSessionCookie(cookies: Cookies, userId: number): void {
+  cookies.set(getSessionCookieName(), signSession({ uid: userId }), {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false,
+    maxAge: 60 * 60 * 24 * 30
+  });
 }
 
 export function getUserById(id: number) {
@@ -74,7 +89,7 @@ export function getUserForLogin(username: string) {
     .get(username) as { id: number; username: string; passwordHash: string } | undefined;
 }
 
-export async function hashPassword(password: string): Promise<string> {
+async function hashPassword(password: string): Promise<string> {
   const { default: bcrypt } = await import('bcryptjs');
   return bcrypt.hash(password, 12);
 }
@@ -92,6 +107,7 @@ export async function createUser(
   const info = sqlite
     .prepare('insert into users (username, password_hash) values (?, ?)')
     .run(username.trim(), passwordHash);
+  cachedUserCount = (cachedUserCount ?? 0) + 1;
   return { id: Number(info.lastInsertRowid), username: username.trim() };
 }
 

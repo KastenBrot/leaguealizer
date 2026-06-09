@@ -1,7 +1,55 @@
 import { sqlite } from '$lib/server/db';
-import { generatePairs } from '$lib/server/matches';
+import {
+  generatePairs,
+  listMatches,
+  matchStats,
+  playerIdsWithResults,
+  recentResultsFromMatches,
+  type MatchWithNames
+} from '$lib/server/matches';
+import { listPlayers, type Player } from '$lib/server/players';
+import { buildStandings, type StandingsRow } from '$lib/server/standings';
 import { isValidLeagueStatus, type LeagueStatus } from '$lib/server/scoring';
 import { isValidSlug, slugify } from '$lib/server/slug';
+
+export type LeagueContext = {
+  players: Player[];
+  matches: MatchWithNames[];
+  standings: StandingsRow[];
+  recent: MatchWithNames[];
+  stats: { total: number; completed: number };
+  canManageRoster: boolean;
+  playerIdsWithResults: number[];
+};
+
+export function loadLeagueContext(
+  leagueId: number,
+  options?: { recentLimit?: number; status?: LeagueStatus }
+): LeagueContext {
+  const players = listPlayers(leagueId);
+  const matches = listMatches(leagueId);
+  const standings = buildStandings(
+    players.map((p) => ({ id: p.id, name: p.name, factionId: p.factionId })),
+    matches.map((m) => ({
+      playerAId: m.playerAId,
+      playerBId: m.playerBId,
+      result: m.result
+    }))
+  );
+  const recentLimit = options?.recentLimit ?? 10;
+  const recent = recentResultsFromMatches(matches, recentLimit);
+  const stats = matchStats(matches);
+  const leagueStatus = options?.status ?? 'draft';
+  return {
+    players,
+    matches,
+    standings,
+    recent,
+    stats,
+    canManageRoster: leagueStatus === 'draft' || leagueStatus === 'active',
+    playerIdsWithResults: playerIdsWithResults(matches)
+  };
+}
 
 export type League = {
   id: number;
@@ -49,7 +97,7 @@ export function getLeagueBySlug(slug: string): League | undefined {
     .get(slug) as League | undefined;
 }
 
-export function getLeagueById(id: number): League | undefined {
+function getLeagueById(id: number): League | undefined {
   return sqlite
     .prepare(
       `select id, slug, name, status, created_at as createdAt, updated_at as updatedAt

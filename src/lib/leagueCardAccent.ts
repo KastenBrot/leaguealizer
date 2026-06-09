@@ -1,5 +1,5 @@
 /** Rotating accents for league cards — full class strings for Tailwind. */
-export const LEAGUE_CARD_ACCENTS = [
+const LEAGUE_CARD_ACCENTS = [
   { glow: 'from-teal-400/20 via-teal-500/5 to-transparent', bar: 'bg-teal-400' },
   { glow: 'from-violet-400/20 via-violet-500/5 to-transparent', bar: 'bg-violet-400' },
   { glow: 'from-sky-400/20 via-sky-500/5 to-transparent', bar: 'bg-sky-400' },

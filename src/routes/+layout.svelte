@@ -1,9 +1,7 @@
 <script lang="ts">
   import '../app.css';
-  import ToastHost from '$lib/components/ToastHost.svelte';
 </script>
 
 <div class="app-surface">
-  <ToastHost />
   <slot />
 </div>

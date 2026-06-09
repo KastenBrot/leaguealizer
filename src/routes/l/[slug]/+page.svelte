@@ -2,9 +2,10 @@
   import FactionMark from '$lib/components/FactionMark.svelte';
   import FireComet from '$lib/components/FireComet.svelte';
   import { RECENT_RESULTS_STEP } from '$lib/constants';
-  import { publicResultLabel, statusBadgeClass } from '$lib/ui';
+  import { fmtPoints, podiumRankLabel, publicResultLabel, statusBadgeClass, statusLabel } from '$lib/ui';
+  import type { PageData } from './$types';
 
-  export let data: any;
+  export let data: PageData;
 
   $: league = data.league;
   $: standings = data.standings;
@@ -15,10 +16,6 @@
   $: onFirePlayerIds = new Set<number>(data.onFirePlayerIds ?? []);
   $: hasMoreRecent = recent.length < stats.completed;
   $: nextRecentLimit = recentLimit + RECENT_RESULTS_STEP;
-
-  function fmtPoints(n: number): string {
-    return Number.isInteger(n) ? String(n) : n.toFixed(1);
-  }
 
   $: maxPoints = standings.length
     ? Math.max(...standings.map((row: { points: number }) => row.points))
@@ -55,7 +52,7 @@
           <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">{league.name}</h1>
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-zinc-500">
             <span class={`rounded-full border px-2.5 py-1 font-medium uppercase tracking-wide ${statusBadgeClass(league.status)}`}>
-              {league.status}
+              {statusLabel(league.status)}
             </span>
             <span class="hidden sm:inline text-zinc-700">|</span>
             <span class="tabular-nums">{stats.completed}/{stats.total} matches played</span>
@@ -91,10 +88,15 @@
           {#each standings as row, i (row.playerId)}
             {@const onFire = onFirePlayerIds.has(row.playerId)}
             <li class="flex items-center gap-3">
-              <span class="w-5 shrink-0 text-right text-xs tabular-nums text-zinc-500">{i + 1}</span>
+              <span class="w-14 shrink-0 text-right text-xs tabular-nums text-zinc-500">
+                {#if i < 3}
+                  <span class="block text-[10px] font-medium uppercase tracking-wide text-zinc-600">{podiumRankLabel((i + 1) as 1 | 2 | 3)}</span>
+                {/if}
+                {i + 1}
+              </span>
               <FactionMark factionId={row.factionId} sizeClass="h-8 w-8 shrink-0" />
               <div class="min-w-0 flex-1">
-                <div class="mb-1 flex items-baseline justify-between gap-2">
+                <div class="mb-0 flex items-baseline justify-between gap-2">
                   <span class="truncate text-sm font-medium text-zinc-100">{row.playerName}</span>
                   <span class="shrink-0 text-sm font-semibold tabular-nums text-zinc-50">{fmtPoints(row.points)}</span>
                 </div>

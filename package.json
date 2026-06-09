@@ -15,9 +15,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "node ./scripts/migrate.mjs"
+    "test:watch": "vitest"
   },
   "pnpm": {
     "allowBuilds": {
@@ -27,9 +25,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.9.0",
-    "drizzle-orm": "^0.44.7",
-    "zod": "^4.3.6"
+    "better-sqlite3": "^12.9.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -41,7 +37,6 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.12.2",
     "autoprefixer": "^10.5.0",
-    "drizzle-kit": "^0.31.10",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.17.1",

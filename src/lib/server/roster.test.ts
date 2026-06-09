@@ -68,6 +68,28 @@ describe('addMatchesForPlayer', () => {
   });
 });
 
+describe('playerHasRecordedResults', () => {
+  beforeEach(() => {
+    useTempDb();
+  });
+
+  it('returns true when the player has a recorded match', async () => {
+    const { createLeague, generateSchedule, setLeagueStatus } = await import('./leagues');
+    const { addPlayer, playerHasRecordedResults } = await import('./players');
+    const { recordMatchResult } = await import('./matches');
+
+    const league = createLeague({ name: 'Test', slug: `t-${randomUUID().slice(0, 8)}` });
+    const alice = addPlayer(league.id, 'Alice', 'stormcast-eternals');
+    addPlayer(league.id, 'Bob', 'skaven');
+    generateSchedule(league.id);
+    setLeagueStatus(league.id, 'active');
+    recordMatchResult(league.id, 1, 'a');
+
+    expect(playerHasRecordedResults(league.id, alice.id)).toBe(true);
+    expect(playerHasRecordedResults(league.id, 999)).toBe(false);
+  });
+});
+
 describe('updatePlayer', () => {
   beforeEach(() => {
     useTempDb();

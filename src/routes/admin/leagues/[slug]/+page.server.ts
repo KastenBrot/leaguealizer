@@ -5,41 +5,34 @@ import {
   deleteLeague,
   generateSchedule,
   getLeagueBySlug,
+  loadLeagueContext,
   setLeagueStatus
 } from '$lib/server/leagues';
 import {
   addPlayer,
   countPlayers,
-  listPlayers,
   removePlayer,
   updatePlayer as savePlayer
 } from '$lib/server/players';
-import {
-  addMatchesForPlayer,
-  clearMatchResult,
-  countMatches,
-  listMatches,
-  listRecentResults,
-  recordMatchResult
-} from '$lib/server/matches';
-import { computeStandings } from '$lib/server/standings';
-import {
-  isValidLeagueStatus,
-  isValidResult,
-  type LeagueStatus
-} from '$lib/server/scoring';
+import { addMatchesForPlayer, clearMatchResult, recordMatchResult } from '$lib/server/matches';
+import { isValidResult, type LeagueStatus } from '$lib/server/scoring';
 
 export const load: PageServerLoad = async ({ params }) => {
   const league = getLeagueBySlug(params.slug);
   if (!league) throw error(404, 'League not found');
 
-  const players = listPlayers(league.id);
-  const matches = listMatches(league.id);
-  const stats = countMatches(league.id);
-  const standings = computeStandings(league.id);
-  const recent = listRecentResults(league.id, 10);
+  const ctx = loadLeagueContext(league.id, { recentLimit: 10, status: league.status });
 
-  return { league, players, matches, stats, standings, recent };
+  return {
+    league,
+    players: ctx.players,
+    matches: ctx.matches,
+    stats: ctx.stats,
+    standings: ctx.standings,
+    recent: ctx.recent,
+    canManageRoster: ctx.canManageRoster,
+    playerIdsWithResults: ctx.playerIdsWithResults
+  };
 };
 
 function requireLeague(slug: string) {
@@ -149,15 +142,6 @@ export const actions: Actions = {
     const league = requireLeague(params.slug);
     clearSchedule(league.id);
     setLeagueStatus(league.id, 'draft');
-    return { success: true };
-  },
-
-  setStatus: async ({ request, params }) => {
-    const league = requireLeague(params.slug);
-    const data = await request.formData();
-    const status = String(data.get('status') ?? '');
-    if (!isValidLeagueStatus(status)) return fail(400, { error: 'Invalid status.' });
-    setLeagueStatus(league.id, status);
     return { success: true };
   },
 

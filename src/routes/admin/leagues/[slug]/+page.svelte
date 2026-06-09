@@ -1,16 +1,18 @@
 <script lang="ts">
   import FactionMark from '$lib/components/FactionMark.svelte';
   import { getSpearheadFaction, SPEARHEAD_FACTIONS } from '$lib/factions';
+  import { fmtPoints, statusBadgeClass, statusLabel } from '$lib/ui';
+  import type { ActionData, PageData } from './$types';
 
-  export let data: any;
-  export let form: any;
+  export let data: PageData;
+  export let form: ActionData;
 
   $: league = data.league;
   $: players = data.players;
   $: matches = data.matches;
   $: stats = data.stats;
   $: standings = data.standings;
-  $: canManageRoster = league.status === 'draft' || league.status === 'active';
+  $: canManageRoster = data.canManageRoster;
 
   let editingPlayerId: number | null = null;
   let editName = '';
@@ -20,9 +22,7 @@
     editingPlayerId = null;
   }
 
-  $: playersWithResults = new Set(
-    matches.filter((m: { result: string | null }) => m.result != null).flatMap((m: { playerAId: number; playerBId: number }) => [m.playerAId, m.playerBId])
-  );
+  $: playersWithResults = new Set(data.playerIdsWithResults);
 
   function startEdit(p: { id: number; name: string; factionId: string }) {
     editingPlayerId = p.id;
@@ -41,22 +41,13 @@
     );
   }
 
-  function statusBadge(s: string) {
-    if (s === 'active') return 'border-emerald-500/35 bg-emerald-950/50 text-emerald-200';
-    if (s === 'finished') return 'border-zinc-600/50 bg-zinc-800/60 text-zinc-300';
-    return 'border-amber-500/35 bg-amber-950/45 text-amber-100';
-  }
-
-  function resultLabel(m: any): string {
+  function resultLabel(m: (typeof matches)[number]): string {
     if (!m.result) return 'open';
     if (m.result === 'draw') return 'draw';
     if (m.result === 'a') return `${m.playerAName} won`;
     return `${m.playerBName} won`;
   }
 
-  function fmtPoints(n: number): string {
-    return Number.isInteger(n) ? String(n) : n.toFixed(1);
-  }
 </script>
 
 <main class="relative z-10 min-h-dvh text-zinc-50">
@@ -70,8 +61,8 @@
         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
           <span class="font-mono text-zinc-400">/l/{league.slug}</span>
           <span class="text-zinc-700">·</span>
-          <span class={`rounded-full border px-2 py-0.5 font-medium uppercase tracking-wide ${statusBadge(league.status)}`}>
-            {league.status}
+          <span class={`rounded-full border px-2 py-0.5 font-medium uppercase tracking-wide ${statusBadgeClass(league.status)}`}>
+            {statusLabel(league.status)}
           </span>
           <span class="text-zinc-700">·</span>
           <a class="text-teal-400/90 underline-offset-4 hover:text-teal-300 hover:underline" href={`/l/${league.slug}`}>Public page</a>

@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 
 const dbPath = process.env.DB_PATH ?? path.resolve('data', 'league.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -10,6 +9,7 @@ export const sqlite = new Database(dbPath);
 sqlite.pragma('journal_mode = WAL');
 sqlite.pragma('foreign_keys = ON');
 
+// Sole schema definition — tables and indexes are created here at startup.
 sqlite.exec(`
   create table if not exists users (
     id integer primary key autoincrement,
@@ -54,5 +54,3 @@ sqlite.exec(`
   create index if not exists matches_league_idx on matches(league_id);
   create index if not exists matches_recorded_idx on matches(league_id, recorded_at);
 `);
-
-export const db = drizzle(sqlite);

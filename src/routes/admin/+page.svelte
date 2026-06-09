@@ -1,13 +1,9 @@
 <script lang="ts">
   import { leagueCardAccent } from '$lib/leagueCardAccent';
+  import { statusBadgeClass, statusLabel } from '$lib/ui';
+  import type { PageData } from './$types';
 
-  export let data: any;
-
-  function statusBadge(s: string) {
-    if (s === 'active') return 'border-emerald-500/35 bg-emerald-950/50 text-emerald-200';
-    if (s === 'finished') return 'border-zinc-600/50 bg-zinc-800/60 text-zinc-300';
-    return 'border-amber-500/35 bg-amber-950/45 text-amber-100';
-  }
+  export let data: PageData;
 
   function pct(c: number, t: number) {
     if (!t) return 0;
@@ -67,9 +63,9 @@
                       <p class="mt-1 font-mono text-[11px] text-zinc-500">/l/{l.slug}</p>
                     </div>
                     <span
-                      class={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusBadge(l.status)}`}
+                      class={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${statusBadgeClass(l.status)}`}
                     >
-                      {l.status}
+                      {statusLabel(l.status)}
                     </span>
                   </div>
                   <p class="text-xs text-zinc-500">
